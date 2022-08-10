@@ -4,9 +4,19 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/goexec/goexec/utils"
+)
+
+var (
+	// AppName is the name of the application
+	AppName = "goexec"
+	// Version is the version of the application
+	Version = "1.0.0"
+	// Commit is the commit that was used to build the application
+	GitCommit = "none"
+	// BuildDate is the date the application was built
+	BuildDate = "unknown"
 )
 
 var (
@@ -25,16 +35,6 @@ func main() {
 	// parse flags
 	flag.Parse()
 
-	// if user does not supply flags, print usage
-	if flag.NArg() == 0 {
-		printUsage()
-	}
-
-	// if user wants to run a command, run it
-	if flag.NArg() > 0 {
-		runCommand(flag.Args())
-	}
-
 	// if user wants help, print usage
 	if flagHelp {
 		printUsage()
@@ -45,10 +45,18 @@ func main() {
 		printVersion()
 	}
 
+	// if user does not supply flags, print usage
+	if flag.NArg() == 0 {
+		printUsage()
+	}
+
+	// if user wants to run a command, run it
+	runCommand(flag.Args())
+
 }
 
 func runCommand(args []string) {
-	fmt.Println("Running command: " + strings.Join(args, " "))
+	// fmt.Println("Running command: " + strings.Join(args, " "))
 	lang := utils.GetLangName(args[0])
 
 	switch lang {
@@ -99,6 +107,16 @@ func runCommand(args []string) {
 		if err != nil {
 			fmt.Println(err)
 		}
+	case "typescript":
+		err := utils.RunTSProgram(args...)
+		if err != nil {
+			fmt.Println(err)
+		}
+	case "shell":
+		err := utils.RunShellProgram(args...)
+		if err != nil {
+			fmt.Println(err)
+		}
 
 	case "unknown":
 		fmt.Println("Unknown language")
@@ -116,6 +134,18 @@ func printUsage() {
 }
 
 func printVersion() {
-	version := "1.0.0"
-	fmt.Println(os.Args[0] + " version " + version)
+	shortCommit := shortGitCommit(GitCommit)
+	version := fmt.Sprintf(os.Args[0]+" version: %s %s %s", Version, shortCommit, BuildDate)
+	fmt.Println(version)
+	os.Exit(0)
+}
+
+// shortGitCommit returns the short form of the git commit hash
+func shortGitCommit(fullGitCommit string) string {
+	shortCommit := ""
+	if len(fullGitCommit) >= 7 {
+		shortCommit = fullGitCommit[0:7]
+	}
+
+	return shortCommit
 }

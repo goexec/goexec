@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -32,9 +33,9 @@ func RunGoProgram(args ...string) error {
 
 // RunCProgram executes a c program.
 func RunCProgram(args ...string) error {
-	tempPath := filepath.Join(constants.TempDir, "a.out")
+	tempPath := filepath.Join(constants.TempDir, FileNameWithoutExtension(args[0]))
 	if runtime.GOOS == "windows" {
-		tempPath = "out.exe"
+		tempPath = os.Getenv("TEMP") + "\\" + FileNameWithoutExtension(args[0]) + ".exe"
 	}
 
 	// gcc
@@ -73,7 +74,7 @@ func RunCProgram(args ...string) error {
 func RunCPPProgram(args ...string) error {
 	tempPath := filepath.Join(constants.TempDir, "a.out")
 	if runtime.GOOS == "windows" {
-		tempPath = "out.exe"
+		tempPath = os.Getenv("TEMP") + "\\" + FileNameWithoutExtension(args[0]) + ".exe"
 	}
 
 	// g++
@@ -218,6 +219,55 @@ func RunJSProgram(args ...string) error {
 	return nil
 }
 
+// RunTSProgram executes a tyoescript program.
+func RunTSProgram(args ...string) error {
+	stdout, stderr, err := execShellCmd("tsc", args[0])
+	if stderr != "" {
+		fmt.Println(stderr)
+	}
+	if stdout != "" {
+		fmt.Println(stdout)
+	}
+	if err != nil {
+		return err
+	}
+
+	compiledFile := FileNameWithoutExtension(args[0]) + ".js"
+	args[0] = compiledFile
+	stdout, stderr, err = execShellCmd("node", args...)
+	if stderr != "" {
+		fmt.Println(stderr)
+	}
+	if stdout != "" {
+		fmt.Println(stdout)
+	}
+	if err != nil {
+		return err
+	}
+
+	_, stderr, _ = execShellCmd("rm", compiledFile)
+	if stderr != "" {
+		fmt.Println(stderr)
+	}
+
+	return nil
+}
+
+// RunShellProgram executes a shell program.
+func RunShellProgram(args ...string) error {
+	stdout, stderr, err := execShellCmd(args[0], args[1:]...)
+	if stderr != "" {
+		fmt.Println(stderr)
+	}
+	if stdout != "" {
+		fmt.Println(stdout)
+	}
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // execShellCmd executes a shell command and returns the output.
 func execShellCmd(app string, args ...string) (string, string, error) {
 	var stdout, stderr bytes.Buffer
@@ -292,6 +342,9 @@ func GetLangName(filename string) string {
 	}
 	if strings.HasSuffix(filename, ".ts") {
 		return "typescript"
+	}
+	if strings.HasSuffix(filename, ".sh") {
+		return "shell"
 	}
 
 	return "unknown"
