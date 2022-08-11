@@ -28,7 +28,7 @@ func RunGoProgram(args ...string) error {
 
 // RunCProgram executes a c program.
 func RunCProgram(args ...string) error {
-	tempPath := filepath.Join(constants.TempDir, FileNameWithoutExtension(args[0]))
+	tempPath := filepath.Join(constants.TempDir, "goexec.out")
 	if runtime.GOOS == "windows" {
 		tempPath = os.Getenv("TEMP") + "\\" + FileNameWithoutExtension(args[0]) + ".exe"
 	}
@@ -63,7 +63,7 @@ func RunCProgram(args ...string) error {
 
 // RunCPPProgram executes a c program.
 func RunCPPProgram(args ...string) error {
-	tempPath := filepath.Join(constants.TempDir, "a.out")
+	tempPath := filepath.Join(constants.TempDir, "goexec.out")
 	if runtime.GOOS == "windows" {
 		tempPath = os.Getenv("TEMP") + "\\" + FileNameWithoutExtension(args[0]) + ".exe"
 	}
@@ -209,9 +209,46 @@ func RunShellProgram(args ...string) error {
 	return nil
 }
 
+// RunRustProgram executes a rust program.
+func RunRustProgram(args ...string) error {
+	tempPath := filepath.Join(constants.TempDir, "goexec.out")
+
+	// rust
+	home := os.Getenv("HOME")
+	if home == "" {
+		home = os.Getenv("USERPROFILE")
+	}
+	rustc := filepath.Join(home, ".cargo", "bin", "rustc")
+	argv := []string{"-o", tempPath}
+	argv = append(argv, args[0])
+	stdout, stderr, err := execShellCmd(rustc, argv...)
+	if stderr != "" {
+		fmt.Println(stderr)
+	}
+	if stdout != "" {
+		fmt.Println(stdout)
+	}
+	if err != nil {
+		return err
+	}
+
+	err = execProgram(tempPath, args[1:]...)
+	if err != nil {
+		return err
+	}
+
+	_, stderr, _ = execShellCmd("rm", tempPath)
+	if stderr != "" {
+		fmt.Println(stderr)
+	}
+
+	return nil
+}
+
 // execProgram executes a program.
 func execProgram(program string, args ...string) error {
 	if !commandExists(program) {
+		fmt.Println("command not found: " + program)
 		return fmt.Errorf("command not found: %s", program)
 	}
 
@@ -227,6 +264,7 @@ func execProgram(program string, args ...string) error {
 func execShellCmd(app string, args ...string) (string, string, error) {
 	var stdout, stderr bytes.Buffer
 	if !commandExists(app) {
+		fmt.Println("command not found:", app)
 		return "", "", fmt.Errorf("command not found: %s", app)
 	}
 

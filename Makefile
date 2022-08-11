@@ -9,7 +9,7 @@ build:
 	go build -o "$(APPNAME)" -ldflags "$(LDFLAGS)" .
 
 dev:
-	go build -o "$(APPNAME)" -ldflags "$(LDFLAGS)" .
+	go build -o "$(APPNAME)" -ldflags "$(DLDFLAGS)" .
 
 install:
 	go install -o "$(APPNAME)" -ldflags "$(LDFLAGS)" .

@@ -112,6 +112,12 @@ func runCommand(args []string) {
 		if err != nil {
 			fmt.Println(err)
 		}
+	case "rust":
+		err := utils.RunRustProgram(args...)
+		if err != nil {
+			fmt.Println(err)
+		}
+
 	case "shell":
 		err := utils.RunShellProgram(args...)
 		if err != nil {
