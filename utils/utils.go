@@ -18,12 +18,7 @@ func RunGoProgram(args ...string) error {
 	argv := []string{"run"}
 	argv = append(argv, args...)
 
-	stdout, stderr, err := execShellCmd("go", argv...)
-
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	fmt.Println(stdout)
+	err := execProgram("go", argv...)
 	if err != nil {
 		return err
 	}
@@ -53,11 +48,7 @@ func RunCProgram(args ...string) error {
 		return err
 	}
 
-	stdout, stderr, err = execShellCmd(tempPath, args[1:]...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	fmt.Println(stdout)
+	err = execProgram(tempPath, args[1:]...)
 	if err != nil {
 		return err
 	}
@@ -92,11 +83,7 @@ func RunCPPProgram(args ...string) error {
 		return err
 	}
 
-	stdout, stderr, err = execShellCmd(tempPath, args[1:]...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	fmt.Println(stdout)
+	err = execProgram(tempPath, args[1:]...)
 	if err != nil {
 		return err
 	}
@@ -128,11 +115,7 @@ func RunJavaProgram(args ...string) error {
 	}
 	argv := []string{className}
 	argv = append(argv, args[1:]...)
-	stdout, stderr, err = execShellCmd("java", argv...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	fmt.Println(stdout)
+	err = execProgram("java", argv...)
 	if err != nil {
 		return err
 	}
@@ -146,13 +129,7 @@ func RunJavaProgram(args ...string) error {
 
 // RunRubyProgram executes a ruby program.
 func RunRubyProgram(args ...string) error {
-	stdout, stderr, err := execShellCmd("ruby", args...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err := execProgram("ruby", args...)
 	if err != nil {
 		return err
 	}
@@ -161,13 +138,7 @@ func RunRubyProgram(args ...string) error {
 
 // RunLuaProgram executes a lua program.
 func RunLuaProgram(args ...string) error {
-	stdout, stderr, err := execShellCmd("lua", args...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err := execProgram("lua", args...)
 	if err != nil {
 		return err
 	}
@@ -176,13 +147,7 @@ func RunLuaProgram(args ...string) error {
 
 // RunPythonProgram executes a python program.
 func RunPythonProgram(args ...string) error {
-	stdout, stderr, err := execShellCmd("python3", args...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err := execProgram("python3", args...)
 	if err != nil {
 		return err
 	}
@@ -191,13 +156,7 @@ func RunPythonProgram(args ...string) error {
 
 // RunPerlProgram executes a perl program.
 func RunPerlProgram(args ...string) error {
-	stdout, stderr, err := execShellCmd("perl", args...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err := execProgram("perl", args...)
 	if err != nil {
 		return err
 	}
@@ -206,13 +165,7 @@ func RunPerlProgram(args ...string) error {
 
 // RunJSProgram executes a javascript program.
 func RunJSProgram(args ...string) error {
-	stdout, stderr, err := execShellCmd("node", args...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err := execProgram("node", args...)
 	if err != nil {
 		return err
 	}
@@ -234,13 +187,7 @@ func RunTSProgram(args ...string) error {
 
 	compiledFile := FileNameWithoutExtension(args[0]) + ".js"
 	args[0] = compiledFile
-	stdout, stderr, err = execShellCmd("node", args...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err = execProgram("node", args...)
 	if err != nil {
 		return err
 	}
@@ -255,17 +202,25 @@ func RunTSProgram(args ...string) error {
 
 // RunShellProgram executes a shell program.
 func RunShellProgram(args ...string) error {
-	stdout, stderr, err := execShellCmd(args[0], args[1:]...)
-	if stderr != "" {
-		fmt.Println(stderr)
-	}
-	if stdout != "" {
-		fmt.Println(stdout)
-	}
+	err := execProgram(args[0], args[1:]...)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// execProgram executes a program.
+func execProgram(program string, args ...string) error {
+	if !commandExists(program) {
+		return fmt.Errorf("command not found: %s", program)
+	}
+
+	cmd := exec.Command(program, args...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	return err
 }
 
 // execShellCmd executes a shell command and returns the output.
